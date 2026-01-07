@@ -18,13 +18,13 @@ jobs:
       with:
         python-version: '3.12'
     - name: Install dependencies
-      run: 'pip install -r requirements.txt
+      run: pip install -r requirements.txt maturin
+    - name: Build the Python package
+      run: 'maturin build --release --out dist
 
-        pip install maturin
+        pip install uuid_utils --no-index --find-links dist --force-reinstall
 
         '
-    - name: Build the Python package
-      run: maturin develop --release
       env:
         RUSTFLAGS: --cfg uuid_unstable
     - name: Run benchmarks
