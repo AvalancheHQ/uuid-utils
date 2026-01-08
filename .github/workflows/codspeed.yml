@@ -1,0 +1,36 @@
+name: CodSpeed
+'on':
+  push:
+    branches:
+    - main
+  pull_request: null
+  workflow_dispatch: null
+env:
+  RUSTFLAGS: --cfg uuid_unstable
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  codspeed:
+    name: Run benchmarks
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - uses: dtolnay/rust-toolchain@stable
+    - name: Install Python dependencies
+      run: pip install -r requirements.txt
+    - name: Build Python extension with maturin
+      run: 'pip install maturin
+
+        maturin develop --release
+
+        '
+    - name: Run benchmarks
+      uses: CodSpeedHQ/action@v4
+      with:
+        upload-url: ${{ secrets.CODSPEED_FRANCOIS_DEV_UPLOAD_URL }}
+        mode: simulation
+        run: pytest benchmarks/ --codspeed
