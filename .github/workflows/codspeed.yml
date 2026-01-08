@@ -1,0 +1,59 @@
+name: CodSpeed
+'on':
+  push:
+    branches:
+    - main
+  pull_request: null
+  workflow_dispatch: null
+permissions:
+  contents: read
+  id-token: write
+env:
+  RUSTFLAGS: --cfg uuid_unstable
+jobs:
+  benchmarks-python:
+    name: Run Python benchmarks
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Build wheels
+      uses: PyO3/maturin-action@v1
+      with:
+        target: x86_64
+        args: --release --out dist
+        sccache: 'true'
+        manylinux: auto
+    - name: Install built wheel and dependencies
+      run: 'pip install uuid_utils --no-index --find-links dist --force-reinstall
+
+        pip install -r requirements.txt
+
+        '
+    - name: Run Python benchmarks
+      uses: CodSpeedHQ/action@v4
+      with:
+        upload-url: ${{ secrets.CODSPEED_STAGING_UPLOAD_URL }}
+        mode: simulation
+        run: pytest tests/test_bench_*.py --codspeed
+  benchmarks-rust:
+    name: Run Rust benchmarks
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup rust toolchain, cache and cargo-codspeed binary
+      uses: moonrepo/setup-rust@v0
+      with:
+        channel: stable
+        cache-target: release
+        bins: cargo-codspeed
+    - name: Build the benchmark target(s)
+      run: cargo codspeed build
+    - name: Run the Rust benchmarks
+      uses: CodSpeedHQ/action@v4
+      with:
+        upload-url: ${{ secrets.CODSPEED_STAGING_UPLOAD_URL }}
+        mode: simulation
+        run: cargo codspeed run

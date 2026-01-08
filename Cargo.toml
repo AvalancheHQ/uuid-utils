@@ -26,3 +26,17 @@ uuid = { version  = "1.19.0", features = [
     "fast-rng",
 ]}
 ahash = "0.8.12"
+
+[dev-dependencies]
+divan = { version = "4.2.1", package = "codspeed-divan-compat" }
+
+[build-dependencies]
+cc = "=1.0.79"
+
+[[bench]]
+name = "uuid_generation"
+harness = false
+
+[[bench]]
+name = "uuid_parsing"
+harness = false
